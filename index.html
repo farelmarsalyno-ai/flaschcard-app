@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flashcard Bahasa Inggris</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: #f0f2f5; margin: 0; }
+    .card { width: 320px; min-height: 180px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; cursor: pointer; user-select: none; }
+    .context { font-size: 0.95rem; color: #555; margin-top: 10px; font-style: italic; }
+    .buttons { margin-top: 20px; display: flex; gap: 12px; }
+    button { padding: 10px 18px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+    .easy { background: #2e7d32; color: white; }
+    .hard { background: #c62828; color: white; }
+    .hint { margin-top: 15px; font-size: 0.8rem; color: #888; }
+  </style>
+</head>
+<body>
+
+  <div id="card" class="card" onclick="flipCard()"></div>
+  <p class="hint">Klik kartu untuk melihat arti</p>
+
+  <div class="buttons" id="btn-group" style="display:none;">
+    <button class="hard" onclick="rate(1)">Sulit (Ulangi)</button>
+    <button class="easy" onclick="rate(2)">Mudah (Lanjut)</button>
+  </div>
+
+  <script>
+    const flashcards = [
+      { word: "Abundant", context: "Water is abundant in this region.", meaning: "Melimpah" },
+      { word: "Reluctant", context: "He was reluctant to leave the party.", meaning: "Enggan / Ragu-ragu" },
+      { word: "Pivotal", context: "This decision plays a pivotal role in your career.", meaning: "Sangat Penting / Krusial" }
+    ];
+
+    let currentIndex = 0;
+    let isFlipped = false;
+
+    function renderCard() {
+      const card = flashcards[currentIndex];
+      const cardEl = document.getElementById("card");
+      
+      if (!isFlipped) {
+        cardEl.innerHTML = `<h2>${card.word}</h2><p class="context">"${card.context}"</p>`;
+      } else {
+        cardEl.innerHTML = `<h2>${card.meaning}</h2>`;
+      }
+      
+      document.getElementById("btn-group").style.display = isFlipped ? "flex" : "none";
+    }
+
+    function flipCard() {
+      isFlipped = !isFlipped;
+      renderCard();
+    }
+
+    function rate(level) {
+      if (level === 1) {
+        flashcards.push(flashcards[currentIndex]);
+      }
+      currentIndex++;
+      if (currentIndex >= flashcards.length) {
+        alert("Selamat! Semua kartu sudah selesai dipelajari.");
+        currentIndex = 0;
+      }
+      isFlipped = false;
+      renderCard();
+    }
+
+    renderCard();
+  </script>
+</body>
+</html>
