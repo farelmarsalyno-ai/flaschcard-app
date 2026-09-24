@@ -3,70 +3,204 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flashcard Bahasa Inggris</title>
+  <title>Flashcard B.Inggris Pintar</title>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: #f0f2f5; margin: 0; }
-    .card { width: 320px; min-height: 180px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; cursor: pointer; user-select: none; }
-    .context { font-size: 0.95rem; color: #555; margin-top: 10px; font-style: italic; }
-    .buttons { margin-top: 20px; display: flex; gap: 12px; }
-    button { padding: 10px 18px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
-    .easy { background: #2e7d32; color: white; }
-    .hard { background: #c62828; color: white; }
-    .hint { margin-top: 15px; font-size: 0.8rem; color: #888; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; background: #f0f2f5; margin: 0; padding: 20px; min-height: 100vh; }
+    h1 { font-size: 1.5rem; color: #1a1a1a; margin-bottom: 20px; }
+    
+    .card { width: 100%; max-width: 360px; min-height: 220px; background: white; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 25px; cursor: pointer; user-select: none; position: relative; transition: transform 0.2s; }
+    .card:active { transform: scale(0.98); }
+    .audio-btn { position: absolute; top: 15px; right: 15px; background: #e8f0fe; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .word { font-size: 1.8rem; font-weight: bold; color: #2c3e50; margin: 0; }
+    .context { font-size: 1rem; color: #666; margin-top: 12px; font-style: italic; line-height: 1.4; }
+    .meaning { font-size: 1.6rem; color: #2e7d32; font-weight: bold; }
+    
+    .buttons { margin-top: 20px; display: flex; gap: 12px; width: 100%; max-width: 360px; }
+    button.rate-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.95rem; color: white; }
+    .easy { background: #2e7d32; }
+    .hard { background: #c62828; }
+    
+    .add-section { width: 100%; max-width: 360px; background: white; border-radius: 16px; padding: 20px; margin-top: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .add-section h3 { margin-top: 0; font-size: 1.1rem; color: #333; }
+    .input-group { display: flex; gap: 8px; }
+    input[type="text"] { flex: 1; padding: 10px 14px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; }
+    .add-btn { background: #1976d2; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-weight: bold; cursor: pointer; }
+    .loading { font-size: 0.85rem; color: #0288d1; margin-top: 8px; display: none; }
+
+    .card-list { width: 100%; max-width: 360px; margin-top: 20px; }
+    .card-item { background: white; padding: 10px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.9rem; }
+    .delete-btn { background: none; border: none; color: #c62828; font-weight: bold; cursor: pointer; }
   </style>
 </head>
 <body>
 
-  <div id="card" class="card" onclick="flipCard()"></div>
-  <p class="hint">Klik kartu untuk melihat arti</p>
+  <h1>⚡ Flashcard B.Inggris</h1>
 
-  <div class="buttons" id="btn-group" style="display:none;">
-    <button class="hard" onclick="rate(1)">Sulit (Ulangi)</button>
-    <button class="easy" onclick="rate(2)">Mudah (Lanjut)</button>
+  <!-- Kartu Utama -->
+  <div id="card" class="card" onclick="flipCard()">
+    <button class="audio-btn" onclick="speakCurrentWord(event)">🔊</button>
+    <div id="card-content"></div>
   </div>
 
+  <p style="font-size:0.8rem; color:#888; margin-top:10px;">Ketuk kartu untuk melihat arti</p>
+
+  <!-- Tombol Sesuai Riset SRS -->
+  <div class="buttons" id="btn-group" style="display:none;">
+    <button class="rate-btn hard" onclick="rate(1)">Sulit (Ulangi)</button>
+    <button class="rate-btn easy" onclick="rate(2)">Mudah (Lanjut)</button>
+  </div>
+
+  <!-- Form Tambah Kata Otomatis -->
+  <div class="add-section">
+    <h3>✨ Tambah Kata Otomatis</h3>
+    <div class="input-group">
+      <input type="text" id="new-word" placeholder="Ketik 1 kata B.Inggris...">
+      <button class="add-btn" onclick="autoAddWord()">Cari & Tambah</button>
+    </div>
+    <div id="loading-msg" class="loading">Mencari arti & contoh kalimat...</div>
+  </div>
+
+  <!-- Daftar Kata -->
+  <div class="card-list" id="card-list"></div>
+
   <script>
-    const flashcards = [
+    const defaultCards = [
       { word: "Abundant", context: "Water is abundant in this region.", meaning: "Melimpah" },
       { word: "Reluctant", context: "He was reluctant to leave the party.", meaning: "Enggan / Ragu-ragu" },
-      { word: "Pivotal", context: "This decision plays a pivotal role in your career.", meaning: "Sangat Penting / Krusial" }
+      { word: "Pivotal", context: "This decision plays a pivotal role.", meaning: "Sangat Penting" }
     ];
 
+    let flashcards = JSON.parse(localStorage.getItem("my_flashcards")) || defaultCards;
     let currentIndex = 0;
     let isFlipped = false;
 
+    function saveCards() {
+      localStorage.setItem("my_flashcards", JSON.stringify(flashcards));
+      renderList();
+    }
+
     function renderCard() {
+      if (flashcards.length === 0) {
+        document.getElementById("card-content").innerHTML = "<p>Belum ada kartu. Tambahkan kata baru di bawah!</p>";
+        document.getElementById("btn-group").style.display = "none";
+        return;
+      }
+
       const card = flashcards[currentIndex];
-      const cardEl = document.getElementById("card");
+      const contentEl = document.getElementById("card-content");
       
       if (!isFlipped) {
-        cardEl.innerHTML = `<h2>${card.word}</h2><p class="context">"${card.context}"</p>`;
+        contentEl.innerHTML = `<h2 class="word">${card.word}</h2><p class="context">"${card.context}"</p>`;
       } else {
-        cardEl.innerHTML = `<h2>${card.meaning}</h2>`;
+        contentEl.innerHTML = `<h2 class="meaning">${card.meaning}</h2>`;
       }
       
       document.getElementById("btn-group").style.display = isFlipped ? "flex" : "none";
     }
 
     function flipCard() {
+      if (flashcards.length === 0) return;
       isFlipped = !isFlipped;
       renderCard();
     }
 
+    function speakCurrentWord(event) {
+      event.stopPropagation(); // Biar kartu gak ikut terbalik pas tekan tombol suara
+      if (flashcards.length === 0) return;
+      const wordText = flashcards[currentIndex].word;
+      const utterance = new SpeechSynthesisUtterance(wordText);
+      utterance.lang = "en-US";
+      window.speechSynthesis.speak(utterance);
+    }
+
     function rate(level) {
       if (level === 1) {
+        // Masukkan kembali kartu sulit ke paling belakang (SRS)
         flashcards.push(flashcards[currentIndex]);
       }
       currentIndex++;
       if (currentIndex >= flashcards.length) {
-        alert("Selamat! Semua kartu sudah selesai dipelajari.");
+        alert("Sesi selesai! Mengulang dari awal.");
         currentIndex = 0;
       }
       isFlipped = false;
       renderCard();
     }
 
+    // Fungsi otomatis ambil terjemahan & contoh kalimat lewat API publik gratis
+    async function autoAddWord() {
+      const inputEl = document.getElementById("new-word");
+      const wordInput = inputEl.value.trim();
+      const loadingEl = document.getElementById("loading-msg");
+
+      if (!wordInput) return alert("Ketik satu kata bahasa Inggris dulu!");
+
+      loadingEl.style.display = "block";
+
+      try {
+        // 1. Ambil contoh kalimat dari Dictionary API
+        let context = `Example with ${wordInput}.`;
+        const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${wordInput}`);
+        if (dictRes.ok) {
+          const dictData = await dictRes.json();
+          for (const mean of dictData[0].meanings) {
+            for (const def of mean.definitions) {
+              if (def.example) {
+                context = def.example;
+                break;
+              }
+            }
+          }
+        }
+
+        // 2. Ambil terjemahan bahasa Indonesia dari MyMemory API
+        let meaning = "Terjemahan tidak ditemukan";
+        const transRes = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(wordInput)}&langpair=en|id`);
+        if (transRes.ok) {
+          const transData = await transRes.json();
+          meaning = transData.responseData.translatedText;
+        }
+
+        // Simpan kartu baru
+        flashcards.push({ word: wordInput, context, meaning });
+        saveCards();
+        
+        inputEl.value = "";
+        alert(`Berhasil menambahkan kata: ${wordInput}`);
+        
+        if (flashcards.length === 1) renderCard();
+
+      } catch (err) {
+        alert("Gagal mengambil data otomatis. Coba periksa koneksi internet.");
+      } finally {
+        loadingEl.style.display = "none";
+      }
+    }
+
+    function deleteCard(index) {
+      flashcards.splice(index, 1);
+      if (currentIndex >= flashcards.length) currentIndex = 0;
+      saveCards();
+      renderCard();
+    }
+
+    function renderList() {
+      const listEl = document.getElementById("card-list");
+      listEl.innerHTML = "<h4>Daftar Katamu (" + flashcards.length + ")</h4>";
+      flashcards.forEach((item, idx) => {
+        listEl.innerHTML += `
+          <div class="card-item">
+            <span><strong>${item.word}</strong> - ${item.meaning}</span>
+            <button class="delete-btn" onclick="deleteCard(${idx})">Hapus</button>
+          </div>
+        `;
+      });
+    }
+
+    // Inisialisasi awal
     renderCard();
+    renderList();
   </script>
 </body>
 </html>
